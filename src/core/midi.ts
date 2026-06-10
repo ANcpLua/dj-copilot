@@ -189,11 +189,9 @@ class MidiTrackBuilder {
    */
   build(): number[] {
     this.addEndOfTrack();
-    return [
-      ...TRACK_CHUNK,
-      ...int32ToBytes(this.events.length),
-      ...this.events,
-    ];
+    // concat, not spread — spreading large event arrays into a literal
+    // exceeds the JS call-argument limit on big compositions (e.g. DJ sets)
+    return [...TRACK_CHUNK, ...int32ToBytes(this.events.length)].concat(this.events);
   }
 }
 
@@ -274,10 +272,8 @@ export class MidiGenerator {
       ...int16ToBytes(TICKS_PER_BEAT),       // Ticks per beat
     ];
 
-    const allBytes = [...headerBytes];
-    for (const trackBytes of tracks) {
-      allBytes.push(...trackBytes);
-    }
+    // concat per track, not push(...spread) — see MidiTrackBuilder.build()
+    const allBytes = headerBytes.concat(...tracks);
 
     return Buffer.from(allBytes);
   }

@@ -3,7 +3,7 @@
 [![Agents League 2026](https://img.shields.io/badge/Agents%20League-2026-blue)](https://github.com/microsoft/agentsleague)
 [![Track](https://img.shields.io/badge/Track-Creative%20Apps-purple)](https://github.com/microsoft/agentsleague/tree/main/starter-kits/1-creative-apps)
 [![Built with](https://img.shields.io/badge/Built%20with-GitHub%20Copilot-green)](https://github.com/features/copilot)
-[![MCP Tools](https://img.shields.io/badge/MCP%20Tools-5-orange)](https://code.visualstudio.com/docs/copilot/customization/mcp-servers)
+[![MCP Tools](https://img.shields.io/badge/MCP%20Tools-6-orange)](https://code.visualstudio.com/docs/copilot/customization/mcp-servers)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
 > **Every line of code has a melody.** CodeSonify transforms source code into real music. Functions become melodies, loops become rhythms, conditionals become chord changes, and bugs sound dissonant. Export to MIDI, sonify git diffs, and hear the evolution of your codebase — all integrated into GitHub Copilot via MCP.
@@ -76,6 +76,52 @@ A polished, real-time web interface featuring:
 - **Musical interpretation** — human-readable description of what the music represents
 - **Diff Mode** — compare old vs new code versions visually and musically
 - **MIDI download** — one-click export to .mid file
+
+---
+
+## 🎧 DJ Copilot — Hear Your Repository as a DJ Set
+
+Point CodeSonify at a whole repository and it plays it as **one continuous,
+harmonically-mixed DJ set**: every source file becomes a track with its own key
+and BPM, the set follows a real energy arc (open low → build → peak → cooldown),
+and **every transition decision retrieves from and cites a curated dj-craft
+knowledge base** — Camelot harmonic mixing, energy management, BPM/phrase
+matching — grounded via **Foundry IQ** (an Azure AI Search knowledge base
+queried over MCP).
+
+```bash
+npm install
+npm run dj                    # DJ this repo (offline LocalFoundryIq fixture)
+npm run dj -- path/to/repo    # DJ any repository
+```
+
+Every transition prints the mixing rule it followed, with citation:
+
+```text
+5. src/dj/knowledge.ts  [9A · 160 BPM · energy 100]
+   ↳ 9A → 10A | clockwise lift — gradual EQ swap on a 16-bar phrase
+     📖 kb/camelot#2 — "Adjacent key move (one step clockwise)"
+```
+
+**Live Foundry IQ** — point the same code at a real Azure AI Search
+knowledge-base MCP endpoint (the offline fixture serves the *same corpus* with
+the *same citations*, so the demo runs identically with zero network):
+
+```bash
+FOUNDRY_IQ_MCP_URL="https://<search>.search.windows.net/knowledgebases/<kb>/mcp?api-version=2026-05-01-preview" \
+FOUNDRY_IQ_API_KEY="<query-key>" npm run dj
+```
+
+- `npm run dj:upload-kb` pushes the corpus to the live index (admin key via env)
+- `npm run dj:live-check` verifies one real cited retrieval over the MCP endpoint
+- If a KB lookup fails mid-set, the transition degrades to a plain crossfade and
+  the set always completes
+- **Artifacts:** `djset-out/djset.json` (setlist + cited transitions) and
+  `djset-out/djset.mid` — the entire stitched set, playable in any DAW
+- **Telemetry:** every sequencing run emits OpenTelemetry spans (one per
+  transition, carrying the cited rule) to [qyl](https://github.com/O-ANcppLua/qyl)
+  via OTLP on `:4318`; exported spans redact auth headers
+- Exposed to agents as MCP tool #6: **`sequence_set`**
 
 ---
 

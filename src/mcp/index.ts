@@ -14,6 +14,9 @@ import { MidiGenerator } from '../core/midi.js';
 import { DiffSonifier } from '../core/diff.js';
 import type { MusicStyle } from '../core/mapper.js';
 import type { CodeLanguage } from '../core/types.js';
+import { createKnowledgeClient } from '../dj/knowledge.js';
+import { sequenceSet } from '../dj/sequencer.js';
+import { initTelemetry } from '../dj/telemetry.js';
 
 // Initialize engines
 const composer = new Composer();
@@ -388,6 +391,67 @@ server.tool(
         }],
         isError: true,
       };
+    }
+  }
+);
+
+// ============================================================
+// Tool 6: sequence_set — DJ your repository as one continuous set
+// ============================================================
+server.tool(
+  'sequence_set',
+  'Hear a repository as one continuous, harmonically-mixed DJ set. Sonifies every source file (each gets a key + BPM), orders them into an energy arc, and grounds every transition in the dj-craft knowledge base (Camelot harmonic mixing, energy management, BPM/phrase matching) — live Foundry IQ when FOUNDRY_IQ_MCP_URL is set, deterministic LocalFoundryIq fixture otherwise. Every transition cites the mixing rule it followed. Writes a set JSON and a playable .mid file.',
+  {
+    path: z.string().describe('Path to the repository / directory to sequence'),
+    style: z.enum(['classical', 'electronic', 'ambient', 'jazz', 'rock'])
+      .optional().describe('Musical style for the per-file compositions (default: electronic)'),
+    max_tracks: z.number().int().min(2).max(24).optional()
+      .describe('Set length in tracks (default: 12)'),
+    out_dir: z.string().optional()
+      .describe('Directory for djset.json + djset.mid artifacts (default: <path>/djset-out)'),
+  },
+  async ({ path, style, max_tracks, out_dir }) => {
+    initTelemetry();
+    const kb = await createKnowledgeClient();
+    try {
+      const set = await sequenceSet(path, kb, out_dir ?? `${path}/djset-out`, {
+        style: (style as MusicStyle) ?? 'electronic',
+        maxTracks: max_tracks,
+      });
+
+      const lines = [
+        `🎧 **DJ Copilot set: ${set.repo}**`,
+        ``,
+        `**IQ grounding:** ${set.iqMode}`,
+        `**Tracks:** ${set.tracks.length} · **Duration:** ${Math.round(set.totalDurationSec)}s`,
+        `**Cited transitions:** ${set.transitions.length - set.degradedCount}/${set.transitions.length}` +
+          (set.degradedCount ? ` (${set.degradedCount} degraded to plain crossfade)` : ''),
+        ``,
+        `🎛 **Setlist:**`,
+        ...set.tracks.flatMap((t, i) => {
+          const row = [`${i + 1}. \`${t.file}\` — ${t.camelot} · ${t.bpm} BPM · energy ${t.energy}`];
+          const tr = set.transitions[i];
+          if (tr) {
+            row.push(`   ↳ ${tr.camelot} | ${tr.technique}`);
+            row.push(`     📖 ${tr.citation ? `${tr.citation} — "${tr.citedRule}"` : 'uncited (degraded)'}`);
+          }
+          return row;
+        }),
+        ``,
+        `📦 **Artifacts:** \`${set.artifacts.json}\` · \`${set.artifacts.midi}\` (open in any DAW)`,
+      ];
+
+      return { content: [{ type: 'text' as const, text: lines.join('\n') }] };
+    } catch (error) {
+      return {
+        content: [{
+          type: 'text' as const,
+          text: `❌ Error sequencing set: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        }],
+        isError: true,
+      };
+    } finally {
+      await kb.close();
     }
   }
 );

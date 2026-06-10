@@ -8,7 +8,10 @@
     "start": "tsx src/web/server.ts",
     "mcp": "tsx src/mcp/index.ts",
     "build": "tsc",
-    "dev": "tsx watch src/web/server.ts"
+    "dev": "tsx watch src/web/server.ts",
+    "dj": "tsx src/dj/demo.ts",
+    "dj:upload-kb": "tsx src/dj/uploadKb.ts",
+    "dj:live-check": "tsx src/dj/liveCheck.ts"
   },
   "keywords": [
     "code",
@@ -21,6 +24,10 @@
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1",
+    "@opentelemetry/api": "^1.9.1",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.218.0",
+    "@opentelemetry/resources": "^2.7.1",
+    "@opentelemetry/sdk-trace-node": "^2.7.1",
     "@types/node": "^22.15.21",
     "cors": "^2.8.5",
     "express": "^5.1.0",
